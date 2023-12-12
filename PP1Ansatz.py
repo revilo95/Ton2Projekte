@@ -11,6 +11,7 @@ E_ges = np.sum(np.square(y_normiert))/fs
 E_array = []
 timescale = np.linspace(0, n_anzahl/fs , num=n_anzahl)
 
+#in dB umrechnen
 for i in range(0, len(y)):
     E = np.sum(np.square(y_normiert[i:]))/fs
     E_log = 10*np.log10(E/E_ges)
