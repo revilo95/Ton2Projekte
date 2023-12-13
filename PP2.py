@@ -7,11 +7,15 @@ import matplotlib.pyplot as plt
 max_values =[]
 max_values_times = []
 
-fs, y = read("PP2Data/StereoTrack.wav")
-#get number of tracks
-n_tracks = len(y[0])
-print(n_tracks)
-#plot one plot for each track
+fs, y = read("PP2Data/MonoTrack.wav")
+
+#Überprüfung ob Mono oder Stereo und ggf. Konvertierung
+print(f"Anzahl der Kanäle des Wave-Files: {y.ndim}")
+if y.ndim == 1:
+    y = np.column_stack((y,y))
+    n_tracks = len(y[0])
+    print(f"**Converted to Stereo**")
+
 
 for i in range(0, n_tracks):
     plt.plot(y[:,i])
