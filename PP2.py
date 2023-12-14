@@ -38,66 +38,7 @@ for i in range(len(LR[:, 0])):
 sd.play(LR, fs)
 sd.wait()
 
-"""
-def linearPanning(RKanal, LKanal, panning):
-    print(panning)
-    LR = np.zeros((len(RKanal), 2))
-    RKanal = RKanal * 0.5
-    LKanal = LKanal * 0.5
-    LKanal = LKanal * ((100 - panning) * 0.01)
-    RKanal = RKanal * (panning*0.01)
-    LR[:, 0] = (2 / np.pi) * (np.pi / 2 + LKanal)
-    LR[:, 1] = (2 / np.pi) *  RKanal
 
-
-    #LR = np.hstack((LKanal, RKanal))
-    sd.play(LR, fs)
-    sd.wait()
-
-linearPanning(RechterKanal, LinkerKanal, 10)
-"""
-
-
-"""
-#Normierung
-y_normiert = (y*fs)/((2**15)-1)
-E_ges = np.sum(np.square(y_normiert))/fs
-
-sd.play(y, fs)
-sd.wait()
-
-print("Is cooking...")
-for i in range(0, len(y_normiert), 100):
-    E = np.sum(np.square(y_normiert[i:]))/fs
-    E_log = 10*np.log10(E/E_ges)
-    E_array = np.append(E_array, E_log)
-print("...done")
-
-for i in range(0, y_normiert.ndim):
-    #Plot der Signale
-    plt.subplot(2, 1, i+1)
-    plt.plot(y_normiert[:,i])
-    plt.title(f"Track: {i}")
-
-
-    #return max value and its time
-    max_value = np.max(y_normiert[:,i])
-    max_values.append(max_value)
-    max_value_time = np.argmax(y_normiert[:,i])/fs
-    max_values_times.append(max_value_time)
-    print(f"Track: {i}\nmax value: {max_value}\nmax value time: {max_value_time}")
-
-#Plot der Energien
-plt.show()
-
-#Ermittlung des Winkels über Laufzeitdifferenz
-if(max_values_times[0] < max_values_times[1]):
-    print("Schallquelle befindet sich links")
-    differenz = max_values_times[1] - max_values_times[0]
-
-else:
-    print("Schallquelle befindet sich rechts")
-"""
 
 
 
