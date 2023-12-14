@@ -2,8 +2,42 @@
 #import PP2
 import tkinter as tk
 from tkinter import filedialog
+import numpy as np
+from scipy.io.wavfile import read
+import sounddevice as sd
+
+fs, y = read("PP2Data/StereoTrack.wav")
+
+#Überprüfung ob Mono oder Stereo und ggf. Konvertierung
+print(f"Anzahl der Kanäle des Wave-Files: {y.ndim}")
+if y.ndim == 1:
+    LR = np.zeros((len(y), 2))
+    LR[:, 0] = y[:, 0]
+    LR[:, 1] = y[:, 0]
+    print(f"**Converted to Stereo**")
+else:
+    LR = y
+    print(f"**Stereo**")
+
+LRBackup = LR
+def linear_pan(LR, grad):
+    RAD = grad*(np.pi/180) #Umrechnung von Grad in Radiant
+    for i in range(len(LR[:, 0])):
+        LR[:, 0][i] *= (2 / np.pi) * (np.pi / 2 - RAD)
+        LR[:, 1][i] *= (2 / np.pi) * RAD
+
+def play():
+    sd.play(LR, fs)
+    sd.wait()
 
 
+
+
+
+
+
+
+###########################################################   GUI
 def load_file():
     file_path = filedialog.askopenfilename()
     if file_path:
@@ -11,10 +45,14 @@ def load_file():
 
 def update_slider_value(slider, label):
     value = slider.get()
-    label.config(text=f"Value: {value}")
+    label.config(text=f"Grad: {value}")
 
 def start_play(slider):
     print(f"Playing slider {slider}")
+
+def stop_play():
+    linear_pan(LRBackup, slider1.get())
+    play()
 
 root = tk.Tk()
 root.title("Sliders and File Load")
@@ -38,7 +76,7 @@ slider1.set(90)
 slider1.pack()
 
 # Play Button for Slider 1
-play_button1 = tk.Button(root, text="Play", command=lambda: start_play(1))
+play_button1 = tk.Button(root, text="Play", command=lambda: stop_play())
 play_button1.pack()
 
 # Slider 2
@@ -66,4 +104,5 @@ play_button3.pack()
 
 
 root.mainloop()
+
 

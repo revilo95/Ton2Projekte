@@ -6,9 +6,6 @@ import sounddevice as sd
 import PP2Gui as gui
 
 
-max_values =[]
-max_values_times = []
-E_array = []
 
 fs, y = read("PP2Data/StereoTrack.wav")
 
@@ -22,22 +19,26 @@ if y.ndim == 1:
 else:
     LR = y
     print(f"**Stereo**")
-
+LRBackup = LR
 #Lineares Panning
-def left_channel(θ):
-    return (2 / np.pi) * (np.pi / 2 - θ)
-def right_channel(θ):
-    return (2 / np.pi) * θ
-grad = 45
-# Apply panning to the audio samples
-panning_angle = grad*(np.pi/180)
-for i in range(len(LR[:, 0])):
-    LR[:, 0][i] *= left_channel(panning_angle)
-    LR[:, 1][i] *= right_channel(panning_angle)
 
-sd.play(LR, fs)
-sd.wait()
+def linear_pan(LR, grad):
+    RAD = grad*(np.pi/180) #Umrechnung von Grad in Radiant
+    for i in range(len(LR[:, 0])):
+        LR[:, 0][i] *= (2 / np.pi) * (np.pi / 2 - RAD)
+        LR[:, 1][i] *= (2 / np.pi) * RAD
 
+
+
+
+
+
+def play():
+    sd.play(LR, fs)
+    sd.wait()
+
+linear_pan(LRBackup, 120)
+play()
 
 
 
