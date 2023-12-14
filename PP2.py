@@ -19,39 +19,45 @@ if y.ndim == 1:
 else:
     LR = y
     print(f"**Stereo**")
-LRBackup = LR
+LRBackup = LR.copy()
 
+####  PANNING DURCH PEGELDIFFERENZEN
 
 #Lineares Panning
-def linear_pan(LR, grad):
+def linear_pan(Arr, grad):
     RAD = grad*(np.pi/180) #Umrechnung von Grad in Radiant
-    for i in range(len(LR[:, 0])):
-        LR[:, 0][i] *= (2 / np.pi) * (np.pi / 2 - RAD)
-        LR[:, 1][i] *= (2 / np.pi) * RAD
+    for i in range(len(Arr[:, 0])):
+        Arr[:, 0][i] *= (2 / np.pi) * (np.pi / 2 - RAD)
+        Arr[:, 1][i] *= (2 / np.pi) * RAD
+    return Arr
 
 #Panning mit Konstanter Leistung
-def konstant_pan(LR, grad):
+def konstant_pan(Arr, grad):
     RAD = grad*(np.pi/180) #Umrechnung von Grad in Radiant
-    for i in range(len(LR[:, 0])):
-        LR[:, 0][i] *= np.cos(RAD)
-        LR[:, 1][i] *= np.sin(RAD)
-
+    for i in range(len(Arr[:, 0])):
+        Arr[:, 0][i] *= np.cos(RAD)
+        Arr[:, 1][i] *= np.sin(RAD)
+    return Arr
 #-4.5dB Panning: Mix aus Konstant und Linear
-def Mix_pan(LR, grad):
+def mix_pan(Arr, grad):
     RAD = grad*(np.pi/180) #Umrechnung von Grad in Radiant
-    for i in range(len(LR[:, 0])):
-        LR[:, 0][i] *= np.sqrt((2/np.pi) * (np.pi/2 - RAD) * np.cos(RAD))
-        LR[:, 1][i] *= np.sqrt((2/np.pi) * RAD * np.sin(RAD))
+    for i in range(len(Arr[:, 0])):
+        Arr[:, 0][i] *= np.sqrt((2/np.pi) * (np.pi/2 - RAD) * np.cos(RAD))
+        Arr[:, 1][i] *= np.sqrt((2/np.pi) * RAD * np.sin(RAD))
+    return Arr
 
-def play():
-    sd.play(LR, fs)
+#Ton wandert von links nach rechts  unelegante Lösung
+for i in range(0, 90, 5):
+    LR = LRBackup.copy()
+    sig = linear_pan(LR, i)
+    print(i)
+    # konstant_pan(LR, i)
+    # Mix_pan(LR, i)
+    sd.play(sig,fs)
     sd.wait()
+    LR = LRBackup
 
 
-linear_pan(LR, 45)
-#konstant_pan(LR, 45)
-#mix_pan(LR, 45)
-play()
 
 
 
