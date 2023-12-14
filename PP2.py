@@ -21,7 +21,7 @@ else:
     print(f"**Stereo**")
 LRBackup = LR.copy()
 
-####  PANNING DURCH PEGELDIFFERENZEN
+############################################  PANNING DURCH PEGELDIFFERENZEN
 
 #Lineares Panning
 def linear_pan(Arr, grad):
@@ -57,7 +57,7 @@ for i in range(0, 90, 5):
     sd.wait()
     LR = LRBackup
 
-
+############################################  PANNING DURCH LAUFZEITDIFFERENZEN
 
 
 
