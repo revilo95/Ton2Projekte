@@ -12,7 +12,7 @@ E_array = []
 timescale = np.linspace(0, n_anzahl/fs , num=n_anzahl)
 
 #in dB umrechnen
-for i in range(0, len(y)):
+for i in range(0, len(y),100): #100er Schritte Spart Rechenzeit
     E = np.sum(np.square(y_normiert[i:]))/fs
     E_log = 10*np.log10(E/E_ges)
     E_array.append(E_log)
@@ -22,13 +22,13 @@ t10 = None
 for i in range(0, len(E_array)):
     if E_array[i] <= -10:
         if t10 is None:
-            t10 = i/fs
+            t10 = (i/fs)*100 #Rechenzeit wieder aufaddieren
 #Zeit wo die energie -20dB ist
 t20 = None
 for i in range(0, len(E_array)):
     if E_array[i] <= -20:
         if t20 is None:
-            t20 = i/fs
+            t20 = (i/fs)*100
 #Nachhallzeit T60 Berechnen
 T60 = (60*(t20-t10))/10
 print(f"Zeitpunkt T10: {t10}\nZeitpunkt T20: {t20}\nNachhall T60: {T60}")
