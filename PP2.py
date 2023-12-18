@@ -21,15 +21,12 @@ if y.ndim == 1:
 y_normiert = (y*fs)/((2**15)-1)
 E_ges = np.sum(np.square(y_normiert))/fs
 
-"""
 print("Is cooking...")
-for i in range(0, len(y_normiert)):
+for i in range(0, len(y_normiert), 100):
     E = np.sum(np.square(y_normiert[i:]))/fs
     E_log = 10*np.log10(E/E_ges)
     E_array = np.append(E_array, E_log)
 print("...done")
-"""
-
 
 for i in range(0, y_normiert.ndim):
     #Plot der Signale
