@@ -1,56 +1,63 @@
-#Description: locate the direction of the sound source
 
 import numpy as np
 from scipy.io.wavfile import read
 import matplotlib.pyplot as plt
+import sounddevice as sd
+#import PP2Gui as gui
 
-max_values =[]
-max_values_times = []
-E_array = []
+
 
 fs, y = read("PP2Data/StereoTrack.wav")
 
 #Überprüfung ob Mono oder Stereo und ggf. Konvertierung
 print(f"Anzahl der Kanäle des Wave-Files: {y.ndim}")
 if y.ndim == 1:
-    y = np.column_stack((y,y))
-    n_tracks = len(y[0])
+    LR = np.zeros((len(y), 2))
+    LR[:, 0] = y[:, 0]
+    LR[:, 1] = y[:, 0]
     print(f"**Converted to Stereo**")
-
-#Normierung
-y_normiert = (y*fs)/((2**15)-1)
-E_ges = np.sum(np.square(y_normiert))/fs
-
-print("Is cooking...")
-for i in range(0, len(y_normiert), 100):
-    E = np.sum(np.square(y_normiert[i:]))/fs
-    E_log = 10*np.log10(E/E_ges)
-    E_array = np.append(E_array, E_log)
-print("...done")
-
-for i in range(0, y_normiert.ndim):
-    #Plot der Signale
-    plt.subplot(2, 1, i+1)
-    plt.plot(y_normiert[:,i])
-    plt.title(f"Track: {i}")
-
-    #return max value and its time
-    max_value = np.max(y_normiert[:,i])
-    max_values.append(max_value)
-    max_value_time = np.argmax(y_normiert[:,i])/fs
-    max_values_times.append(max_value_time)
-    print(f"Track: {i}\nmax value: {max_value}\nmax value time: {max_value_time}")
-
-#Plot der Energien
-plt.show()
-
-#Ermittlung des Winkels über Laufzeitdifferenz
-if(max_values_times[0] < max_values_times[1]):
-    print("Schallquelle befindet sich links")
-    differenz = max_values_times[1] - max_values_times[0]
-
 else:
-    print("Schallquelle befindet sich rechts")
+    LR = y
+    print(f"**Stereo**")
+LRBackup = LR.copy()
+
+############################################  PANNING DURCH PEGELDIFFERENZEN
+
+#Lineares Panning
+def linear_pan(Arr, grad):
+    RAD = grad*(np.pi/180) #Umrechnung von Grad in Radiant
+    for i in range(len(Arr[:, 0])):
+        Arr[:, 0][i] *= (2 / np.pi) * (np.pi / 2 - RAD)
+        Arr[:, 1][i] *= (2 / np.pi) * RAD
+    return Arr
+
+#Panning mit Konstanter Leistung
+def konstant_pan(Arr, grad):
+    RAD = grad*(np.pi/180) #Umrechnung von Grad in Radiant
+    for i in range(len(Arr[:, 0])):
+        Arr[:, 0][i] *= np.cos(RAD)
+        Arr[:, 1][i] *= np.sin(RAD)
+    return Arr
+#-4.5dB Panning: Mix aus Konstant und Linear
+def mix_pan(Arr, grad):
+    RAD = grad*(np.pi/180) #Umrechnung von Grad in Radiant
+    for i in range(len(Arr[:, 0])):
+        Arr[:, 0][i] *= np.sqrt((2/np.pi) * (np.pi/2 - RAD) * np.cos(RAD))
+        Arr[:, 1][i] *= np.sqrt((2/np.pi) * RAD * np.sin(RAD))
+    return Arr
+
+#Ton wandert von links nach rechts  unelegante Lösung
+for i in range(0, 90, 5):
+    LR = LRBackup.copy()
+    sig = linear_pan(LR, i)
+    print(i)
+    # konstant_pan(LR, i)
+    # Mix_pan(LR, i)
+    sd.play(sig,fs)
+    sd.wait()
+    LR = LRBackup
+
+############################################  PANNING DURCH LAUFZEITDIFFERENZEN
 
 
 
