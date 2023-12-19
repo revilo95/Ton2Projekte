@@ -6,7 +6,6 @@ import sounddevice as sd
 #import PP2Gui as gui
 
 
-
 fs, y = read("PP2Data/StereoTrack.wav")
 
 #Überprüfung ob Mono oder Stereo und ggf. Konvertierung
