@@ -40,6 +40,9 @@ def THD(vorher, nachher):
     THD = np.sqrt(verzerrungsleistung / leistung)
     return THD
 
+
+
+
 #Aufgabenteil B: Limiter
 def system_b(Komp_Lim,stat_dyn,threshold,ratio,attack,release,makeupgain):
 
