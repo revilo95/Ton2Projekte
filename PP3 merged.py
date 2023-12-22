@@ -129,9 +129,9 @@ def system_b(Komp_Lim,stat_dyn,threshold,ratio,attack,release,makeupgain):
 
 def reverse_echo(delay, decay):                         # delay = Verzögerungszeit, decay = Abklingzeit
 
-    #fs, datei = read("PP2Data/MonoTrack.wav")
-    datei = PlugSine(1)
-    fs = 48000
+    fs, datei = read("PP2Data/MonoTrack.wav")
+    #datei = PlugSine(1)
+    #fs = 48000
     datei = datei/np.max(np.abs(datei))                             # Datei auf [-1, 1] normalisieren
     sample_delay = int(delay * fs)                                  # Verzögerung in Abtastpunkten berechnen
 
