@@ -3,6 +3,9 @@ from scipy.io.wavfile import read
 import matplotlib.pyplot as plt
 import sounddevice as sd
 
+
+
+
 #Testsignale:
 
 def sine(duration):
@@ -16,12 +19,26 @@ def PlugSine(duration):
     sine = fade * np.sin(2 * np.pi * 440 * rateArray)
     return sine
 
-
+def AudioFile():
+    fs, data = read("PP2Data/MonoTrack.wav")
+    return data
 
 #Aufgabenteil A: Clipping
 def clip_signal(signal, threshold):
     clipped_signal = np.clip(signal, -threshold, threshold)
     return clipped_signal
+
+#Total Harmonic Distortion und Klirrfaktor für Analyse
+def THD(vorher, nachher):
+    # Berechne die Verzerrungsleistung (Harmonische Verzerrungen)
+    verzerrungsleistung = np.sum((nachher - vorher) ** 2)
+
+    # Berechne die Leistung des Grundsignals
+    leistung = np.sum(vorher ** 2)
+
+    # Berechne den Klirrfaktor (als Verhältnis der Verzerrungsleistung zur Grundsignal-Leistung)
+    THD = np.sqrt(verzerrungsleistung / leistung)
+    return THD
 
 #Aufgabenteil B: Limiter
 def system_b(Komp_Lim,stat_dyn,threshold,ratio,attack,release,makeupgain):
@@ -151,7 +168,7 @@ def reverse_echo(delay, decay):                         # delay = Verzögerungsz
     datei = datei * np.max(np.abs(datei))
     return output2
 
-sd.play(reverse_echo(0.8, 1), 48000)
+sd.play(clip_signal(AudioFile(),2000), 48000)
 sd.wait()
-plt.plot(reverse_echo(0.8, 1))
+plt.plot(clip_signal(AudioFile(),2000))
 plt.show()
