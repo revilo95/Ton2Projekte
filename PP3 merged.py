@@ -3,9 +3,6 @@ from scipy.io.wavfile import read
 import matplotlib.pyplot as plt
 import sounddevice as sd
 
-
-
-
 #Testsignale:
 
 def sine(duration):
@@ -41,6 +38,30 @@ def THD(vorher, nachher):
     return THD
 
 
+def KlirrfaktorArbeitspunkt(signal, fs, t_arbeitspunkt, delta_t, fundamental_order):
+    # Bestimme den Index des Arbeitspunkts im Signal
+    index_arbeitspunkt = int(t_arbeitspunkt * fs)
+
+    # Definiere den Bereich um den Arbeitspunkt
+    index_start = max(0, index_arbeitspunkt - int(0.5 * delta_t * fs))
+    index_end = min(len(signal), index_arbeitspunkt + int(0.5 * delta_t * fs))
+
+    # Extrahiere das Fenster um den Arbeitspunkt
+    window_signal = signal[index_start:index_end]
+
+    # Berechne die Fourier-Transformierte des Fensters
+    fft_signal = np.fft.fft(window_signal)
+
+    # Bestimme die Amplitude der Grundwelle im Fenster
+    fundamental_amplitude = np.abs(fft_signal[fundamental_order])
+
+    # Bestimme die Amplitude der harmonischen Verzerrung im Fenster
+    harmonic_amplitude = np.abs(fft_signal[fundamental_order * 2])
+
+    # Berechne den Klirrfaktor der n-ten Ordnung im Fenster um den Arbeitspunkt
+    harmonic_distortion = harmonic_amplitude / fundamental_amplitude
+
+    return harmonic_distortion
 
 
 #Aufgabenteil B: Limiter
@@ -169,9 +190,13 @@ def reverse_echo(delay, decay):                         # delay = Verzögerungsz
     output2 = output2 * np.max(np.abs(output2))                     # zurück in den ursprünglichen Wertebereich
 
     datei = datei * np.max(np.abs(datei))
-    return output2
+    return output1
 
-sd.play(clip_signal(AudioFile(),2000), 48000)
-sd.wait()
-plt.plot(clip_signal(AudioFile(),2000))
+Sinusanalyse = True
+
+if Sinusanalyse:
+    print(f"THD: {THD(sine(1),clip_signal(sine(1),0.4))}")
+    print(f"Klirrfaktor: {KlirrfaktorArbeitspunkt(clip_signal(sine(1),0.4), 48000, 0.02, 0.02, 3)}")
+    plt.plot(clip_signal(sine(1),0.4))
+
 plt.show()
