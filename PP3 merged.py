@@ -3,11 +3,12 @@ from scipy.io.wavfile import read
 import matplotlib.pyplot as plt
 import sounddevice as sd
 
-#Testsignale:
 
+
+#Testsignale:
 def sine(duration):
     rateArray = np.arange(0, duration, 1 / 48000)
-    sine = np.sin(2 * np.pi * 440 * rateArray)
+    sine = np.sin(2 * np.pi * 3 * rateArray)
     return sine
 
 def PlugSine(duration):
@@ -21,8 +22,8 @@ def AudioFile():
     return data
 
 #Aufgabenteil A: Clipping
-def clip_signal(signal, threshold):
-    clipped_signal = np.clip(signal, -threshold, threshold)
+def clip_signal(signal, AP):
+    clipped_signal = np.clip(signal, -AP, AP)
     return clipped_signal
 
 #Total Harmonic Distortion und Klirrfaktor für Analyse
@@ -192,11 +193,41 @@ def reverse_echo(delay, decay):                         # delay = Verzögerungsz
     datei = datei * np.max(np.abs(datei))
     return output1
 
+
+
+#Vergleich der Signale Für Clipping und Limiter
+def plotInOut(EingangsSignal, AusgangsSignal):
+    # Zeitbereich
+    t = np.linspace(0, 1, 48000, endpoint=False)
+    # Plot
+    plt.figure(figsize=(10, 7))
+
+    plt.subplot(2, 1, 1)
+    plt.plot(t, EingangsSignal, label='Eingangssignal')
+    plt.title('Eingangssignal')
+    plt.xlabel('Zeit')
+    plt.ylabel('Amplitude')
+    plt.legend()
+
+    plt.subplot(2, 1, 2)
+    plt.plot(t, AusgangsSignal, label='Ausgangssignal')
+    plt.title('Ausgangssignal')
+    plt.xlabel('Zeit')
+    plt.ylabel('Amplitude')
+    plt.legend()
+
+    plt.tight_layout()
+    plt.show()
+
+
 Sinusanalyse = True
+Arbeitspunkt = 0.5
 
 if Sinusanalyse:
-    print(f"THD: {THD(sine(1),clip_signal(sine(1),0.4))}")
-    print(f"Klirrfaktor: {KlirrfaktorArbeitspunkt(clip_signal(sine(1),0.4), 48000, 0.02, 0.02, 3)}")
-    plt.plot(clip_signal(sine(1),0.4))
+    plotInOut(sine(1), clip_signal(sine(1), Arbeitspunkt))
+    print(f"THD: {THD(sine(1), clip_signal(sine(1), Arbeitspunkt))}")
+    print(f"Klirrfaktor: {KlirrfaktorArbeitspunkt(sine(1), 48000, Arbeitspunkt, 0.1, 10)}")
+
+
 
 plt.show()
