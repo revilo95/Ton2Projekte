@@ -63,7 +63,6 @@ def KlirrfaktorArbeitspunkt(signal, fs, t_arbeitspunkt, delta_t, fundamental_ord
 
     return harmonic_distortion
 
-
 #Aufgabenteil B: Limiter
 def system_b(Komp_Lim,stat_dyn,threshold,ratio,attack,release,makeupgain):
 
