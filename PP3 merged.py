@@ -38,8 +38,6 @@ def AudioFile():
     data = data / np.max(np.abs(data)) #Normierung
     return fs, data
 
-
-
 #Total Harmonic Distortion und Klirrfaktor für Analyse
 def THD(vorher, nachher):
     # Berechne die Verzerrungsleistung (Harmonische Verzerrungen)
