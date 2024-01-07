@@ -1,6 +1,6 @@
 #Gruppe 7
 #PP3
-import time
+
 
 #importe
 import numpy as np
@@ -8,7 +8,7 @@ from scipy.io.wavfile import read
 from scipy.io.wavfile import write
 import matplotlib.pyplot as plt
 import sounddevice as sd
-
+import time
 
 #Setze True oder False für die Programme Sinusanalyse, AudioFileAnalyse und ReverseEcho
 #Wenn True, dann wird das Programm ausgeführt. Wenn mehrere Programme True sind, dann werden diese nacheinander ausgeführt.
