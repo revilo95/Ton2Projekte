@@ -1,7 +1,6 @@
 #Gruppe 7
 #PP3
 
-
 #importe
 import numpy as np
 from scipy.io.wavfile import read
@@ -12,14 +11,14 @@ import time
 
 #Setze True oder False für die Programme Sinusanalyse, AudioFileAnalyse und ReverseEcho
 #Wenn True, dann wird das Programm ausgeführt. Wenn mehrere Programme True sind, dann werden diese nacheinander ausgeführt.
-Sinusanalyse = True
+Sinusanalyse = False
 AudioFileAnalyse = True
-ReverseEcho = True
+ReverseEcho = False
 
 #Setze Arbeitspunkt und Klirrfaktor-Ordnung für Klipping und Limiter
-Arbeitspunkt = 0.5
-KlirrfaktorOrdnung = 10
-
+ArbeitspunktClipping = 0.5
+ArbeitspunktLimiter = -5        #Wert zwischen -50 und 0
+KlirrfaktorOrdnung = 3
 
 #Testsignale:
 def sine(duration):
@@ -38,8 +37,6 @@ def AudioFile():
     data = data / np.max(np.abs(data)) #Normierung
     return fs, data
 
-
-
 #Total Harmonic Distortion und Klirrfaktor für Analyse
 def THD(vorher, nachher):
     # Berechne die Verzerrungsleistung (Harmonische Verzerrungen)
@@ -52,7 +49,6 @@ def THD(vorher, nachher):
     THD = np.sqrt(verzerrungsleistung / leistung)
     THD = THD * 100 # Umrechnung in Prozent
     return THD
-
 
 def KlirrfaktorArbeitspunkt(signal, fs, t_arbeitspunkt, delta_t, fundamental_order):
     # Bestimme den Index des Arbeitspunkts im Signal
@@ -111,7 +107,6 @@ def system_b(file,Komp_Lim,stat_dyn,threshold,ratio,attack,release,makeupgain):
     x = np.array(x, dtype=np.float64)
     x_norm = x/x_ref   # Normierung, falls erforderlich/gewünscht
 
-
     attack_i = attack*Fs
     release_i = release*Fs
 
@@ -120,14 +115,9 @@ def system_b(file,Komp_Lim,stat_dyn,threshold,ratio,attack,release,makeupgain):
     a_R = np.e **(-faktor/(attack_i))
     a_T = np.e **(-faktor/(release_i))
 
-
-    ## x_ref = np.abs(np.max(x))  #Referenzwert für Pegel
+    x_ref = np.abs(np.max(x))  #Referenzwert für Pegel
     u_thresh = 10**(threshold/20)*x_ref
-
-
     if ratio == 0: ratio = 0.1
-
-
 
     ##################
     ## Kompression:
@@ -167,7 +157,7 @@ def system_b(file,Komp_Lim,stat_dyn,threshold,ratio,attack,release,makeupgain):
 
         Lg_c[i] = Lx_c[i] - Lx[i]   # Dämpfung von Lx zum Zeitpunkt i
 
-    #  dynamische Kennlinie
+    #dynamische Kennlinie
         Lg_s[0] = 0.0 #20*np.log10(x[0]/x_ref) #!!! Startwert für dynamische Dämpfung
         if stat_dyn == 1:
             if i > 0:
@@ -192,9 +182,13 @@ def system_b(file,Komp_Lim,stat_dyn,threshold,ratio,attack,release,makeupgain):
             if x[i] < 0:
                 y_a[i] = -y_a[i]
 
-    y_a = y_a/x_ref   # normieren, zur grafischen Darstellung
+    y_a = (y_a/x_ref)   # normieren, zur grafischen Darstellung
+
+
     ###################################
     # Plots:
+
+    dimension = max(g_a)
     fig, ax = plt.subplots()
     plt.subplots_adjust(left=None, bottom=None, right=None, top=None,
                         wspace=None, hspace=0.5)  # Abstand zwischen Subplots
@@ -204,13 +198,14 @@ def system_b(file,Komp_Lim,stat_dyn,threshold,ratio,attack,release,makeupgain):
 
     # Einrichtung der Achsen:
     ax.set_xlim(0, dauer_s)
-    ax.set_ylim(-1.2, 1.2)
+    ax.set_ylim(-dimension, dimension)
     ax.set_xlabel('$t$ in s')
     ax.set_ylabel('$y$($t$),$g$($t$) ')
     ax.grid(True)
     plt.show()
 
     return y_a
+
 
 #Reversed Echo
 def reverseEcho(file, delay, decay):                         # delay = Verzögerungszeit, decay = Abklingzeit
@@ -225,7 +220,6 @@ def reverseEcho(file, delay, decay):                         # delay = Verzöger
     reverse_echo = emptyArr[::-1]                                      # Echo rückwärts abspielen, Werte von echo in umgekehrter Reihenfolge
     EchoOut = file + reverse_echo                                  # Ausgabe durch Originalsound und reverse Echo
     EchoOut = EchoOut * np.max(np.abs(EchoOut))                     # zurück in den ursprünglichen Wertebereich
-
     return EchoOut
 
 #Vergleichende Plots von Ein- und Ausgangssignal
@@ -247,6 +241,7 @@ def plotInOut(EingangsSignal, AusgangsSignal, title='', fs=48000):
     plt.xlabel('Zeit')
     plt.ylabel('Amplitude')
     plt.legend()
+
     #Für Output
     plt.subplot(2, 1, 2)
     plt.plot(t_output, AusgangsSignal, label='Ausgangssignal', color='red')
@@ -254,46 +249,46 @@ def plotInOut(EingangsSignal, AusgangsSignal, title='', fs=48000):
     plt.xlabel('Zeit')
     plt.ylabel('Amplitude')
     plt.legend()
-
     plt.tight_layout()
     plt.show()
+
 
 ####################################################### Programmablauf #######################################################
 
 if Sinusanalyse:
-    print(f"\n****Sinusanalyse****\nEine Sinusfunktion (3 Hz) wird in dem von ihnen gewählten Arbeitspunkt: {Arbeitspunkt} geclipped. Es wird der Klirrfaktor ({KlirrfaktorOrdnung}. Ordnung) und die THD berechnet.\nSie erhalten außerdem einen Plot des bearbeiteten Signals.")
+    print(f"\n****Sinusanalyse****\nEine Sinusfunktion (3 Hz) wird in dem von ihnen gewählten Arbeitspunkt: {ArbeitspunktClipping} geclipped. Es wird der Klirrfaktor ({KlirrfaktorOrdnung}. Ordnung) und die THD berechnet.\nSie erhalten außerdem einen Plot des bearbeiteten Signals.")
     time.sleep(5)
-    plotInOut(sine(1)[1], clip_signal(sine(1)[1], Arbeitspunkt), 'Clipped Sinus-')
-    print(f"\nSinus THD: {round(THD(sine(1)[1], clip_signal(sine(1)[1], Arbeitspunkt)),2)} %")
-    print(f"Sinus Klirrfaktor: {round(KlirrfaktorArbeitspunkt(sine(1)[1], 48000, Arbeitspunkt, 0.1, KlirrfaktorOrdnung),2)} %")
+    plotInOut(sine(1)[1], clip_signal(sine(1)[1], ArbeitspunktClipping), 'Clipped Sinus-')
+    print(f"\nSinus THD: {round(THD(sine(1)[1], clip_signal(sine(1)[1], ArbeitspunktClipping)), 2)} %")
+    print(f"Sinus Klirrfaktor: {round(KlirrfaktorArbeitspunkt(sine(1)[1], 48000, ArbeitspunktClipping, 0.1, KlirrfaktorOrdnung), 2)} %")
     time.sleep(2)
     print(f"\nDer Sinus wird nun mit dem Limiter bearbeitet. Es wird der Klirrfaktor und die THD berechnet.\nSie erhalten auch hiervon einen Plot des Signales.")
     time.sleep(4)
-    x = system_b(sine(1),'Lim',1, -30,2,1,5,5)
+    x = system_b(sine(1),'Lim',0, ArbeitspunktLimiter,2,1,5,5)
     plotInOut(sine(1)[1], x, 'Compressed Sinus-')
     print(f"\nSinus THD: {round(THD(sine(1)[1], x),2)} %")
-    print(f"Sinus Klirrfaktor: {round(KlirrfaktorArbeitspunkt(x, 48000, Arbeitspunkt, 0.1, KlirrfaktorOrdnung),2)} %")
+    print(f"Sinus Klirrfaktor: {round(KlirrfaktorArbeitspunkt(x, 48000, ArbeitspunktClipping, 0.1, KlirrfaktorOrdnung), 2)} %")
     print("\nEnde der Sinusanalyse!")
 
 if AudioFileAnalyse:
-    print(f"\n****Analyse eines Audiofiles****\nEin Audiofile wird in dem von ihnen gewählten Arbeitspunkt: {Arbeitspunkt} geclipped. Es wird der Klirrfaktor ({KlirrfaktorOrdnung}. Ordnung) und die THD berechnet.\nSie erhalten außerdem einen Plot des bearbeiteten Signals.")
+    print(f"\n****Analyse eines Audiofiles****\nEin Audiofile wird in dem von ihnen gewählten Arbeitspunkt: {ArbeitspunktClipping} geclipped. Es wird der Klirrfaktor ({KlirrfaktorOrdnung}. Ordnung) und die THD berechnet.\nSie erhalten außerdem einen Plot des bearbeiteten Signals.")
     time.sleep(5)
-    plotInOut(AudioFile()[1], clip_signal(AudioFile()[1], Arbeitspunkt), 'Clipped Audiofile-')
-    print(f"\nAudio Datei THD: {round(THD(AudioFile()[1], clip_signal(AudioFile()[1], Arbeitspunkt)),2)} %")
-    print(f"Audio Datei Klirrfaktor: {round(KlirrfaktorArbeitspunkt(AudioFile()[1], AudioFile()[0], Arbeitspunkt, 0.1, KlirrfaktorOrdnung),2)} %")
+    plotInOut(AudioFile()[1], clip_signal(AudioFile()[1], ArbeitspunktClipping), 'Clipped Audiofile-')
+    print(f"\nAudio Datei THD: {round(THD(AudioFile()[1], clip_signal(AudioFile()[1], ArbeitspunktClipping)), 2)} %")
+    print(f"Audio Datei Klirrfaktor: {round(KlirrfaktorArbeitspunkt(AudioFile()[1], AudioFile()[0], ArbeitspunktClipping, 0.1, KlirrfaktorOrdnung), 2)} %")
     time.sleep(3)
     print(f"\nDas Audiofile wird nun mit dem Limiter bearbeitet. Es wird der Klirrfaktor und die THD berechnet.\nSie erhalten auch hiervon einen Plot des Signales.")
     time.sleep(4)
-    x = system_b(AudioFile(),'Lim',1, -0.5,2,1,5,5)
+    x = system_b(AudioFile(),'Lim',1, ArbeitspunktLimiter ,0,0.01,0.2,0)
     plotInOut(AudioFile()[1], x, 'Compressed Audiofile-')
     print(f"\nAudio Datei THD: {round(THD(AudioFile()[1], x),2)} %")
-    print(f"Audio Datei Klirrfaktor: {round(KlirrfaktorArbeitspunkt(x, 48000, Arbeitspunkt, 0.1, KlirrfaktorOrdnung),2)} %")
+    print(f"Audio Datei Klirrfaktor: {round(KlirrfaktorArbeitspunkt(x, 48000, ArbeitspunktClipping, 0.1, KlirrfaktorOrdnung), 2)} %")
     time.sleep(3)
     print("\nJetzt hören sie das bearbeitete Audiofile. Zuerst das Original, dann das clipping und dann das Limiter Signal.")
     #Abspielen der bearbeiteten Audiodatei
     sd.play(AudioFile()[1])
     sd.wait()
-    sd.play(clip_signal(AudioFile()[1], Arbeitspunkt))
+    sd.play(clip_signal(AudioFile()[1], ArbeitspunktClipping))
     sd.wait()
     sd.play(x)
     sd.wait()

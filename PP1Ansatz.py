@@ -6,7 +6,7 @@ fs, y = read("Datei_G.wav")
 
 y_normiert = (y*fs)/((2**15)-1)
 n = 1/fs
-n_anzahl = len(y)
+n_anzahl = int(len(y))
 E_ges = np.sum(np.square(y_normiert))/fs
 E_array = []
 timescale = np.linspace(0, n_anzahl/fs , num=n_anzahl)
@@ -22,7 +22,7 @@ t10 = None
 for i in range(0, len(E_array)):
     if E_array[i] <= -10:
         if t10 is None:
-            t10 = (i/fs)*100 #Rechenzeit wieder aufaddieren
+            t10 = (i/fs)*100 #Zeit wieder Aufaddieren
 #Zeit wo die energie -20dB ist
 t20 = None
 for i in range(0, len(E_array)):
@@ -41,6 +41,7 @@ print(f" C50: {C50}\n C80: {C80}\n Gesamtenergie: {E_ges}")
 #Plot
 fig, axes = plt.subplots()
 axes.plot(timescale, E_array, label="LE(t)")
+#axes.plot(2575, E_array, label="LE(t)")
 plt.grid()
 plt.legend()
 plt.title("LE(t)")
