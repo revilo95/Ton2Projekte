@@ -11,11 +11,22 @@ E_ges = np.sum(np.square(y_normiert))/fs
 E_array = []
 timescale = np.linspace(0, n_anzahl/fs , num=n_anzahl)
 
+'''
 #in dB umrechnen
 for i in range(0, len(y),100): #100er Schritte Spart Rechenzeit
     E = np.sum(np.square(y_normiert[i:]))/fs
     E_log = 10*np.log10(E/E_ges)
     E_array.append(E_log)
+'''
+
+# Berechne die gesamte Energie für alle Werte in y_normiert
+E = np.sum(np.square(y_normiert)) / fs
+
+# Berechne das Verhältnis zur Gesamtenergie
+E_log = 10 * np.log10(E / E_ges)
+
+# Fülle E_array mit E_log-Werten entsprechend der Länge von y_normiert
+E_array = [E_log] * len(y_normiert)
 
 #Zeit wo die energie -10dB ist
 t10 = None
