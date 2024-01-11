@@ -11,6 +11,7 @@ import time
 #Setze True oder False für die Programme Sinusanalyse, AudioFileAnalyse und ReverseEcho
 #Wenn True, dann wird das Programm ausgeführt. Wenn mehrere Programme True sind, dann werden diese nacheinander ausgeführt.
 Sinusanalyse = True
+SinHz = 50
 AudioFileAnalyse = False
 ReverseEcho = False
 
@@ -19,6 +20,7 @@ testdata = 'PP2Data/MonoTrack.wav'
 #Setze Arbeitspunkt und Klirrfaktor-Ordnung für Clipping und Limiter
 ArbeitspunktClipping = 0.5
 KlirrfaktorOrdnung = 2
+
 
 lim_kompr ='Lim'                #Wahl zwischen Limiter und Kompressor; Eingabe 'Lim' oder 'Komp'
 stat_dyn =1                     #Wahl zwischen statischer oder dynamischer Kennlinie; Eingabe 0 oder 1
@@ -30,7 +32,7 @@ MakeUpGain =3                    #Verstärkung des vorher komprimierten Signals
 
 
 
-def sine(duration, Hz=3):
+def sine(duration, Hz=SinHz):
     rateArray = np.arange(0, duration, 1 / 48000)
     sine = np.sin(2 * np.pi * Hz * rateArray)
     return 48000, sine
@@ -246,15 +248,17 @@ if Sinusanalyse:
     print(f"\n****Sinusanalyse****\nEine Sinusfunktion (3 Hz) wird in dem von ihnen gewählten Arbeitspunkt: {ArbeitspunktClipping} geclipped. Es wird der Klirrfaktor ({KlirrfaktorOrdnung}. Ordnung) und die THD berechnet.\nSie erhalten außerdem einen Plot des bearbeiteten Signals.")
     time.sleep(5)
     plotInOut(sine(1)[1], clip_signal(sine(1)[1], ArbeitspunktClipping), 'Clipped Sinus-')
-    print(f"\nSinus THD: {klirrfaktorTHD(clip_signal(sine(1)[1], ArbeitspunktClipping), 3)[0]} %")
-    print(f"Sinus Klirrfaktor: {klirrfaktorTHD(clip_signal(sine(1)[1], ArbeitspunktClipping), 3)[1]} %")
+    print(f"\nSinus THD: {klirrfaktorTHD(clip_signal(sine(1)[1], ArbeitspunktClipping), SinHz)[0]} %")
+    print(f"Sinus Klirrfaktor: {klirrfaktorTHD(clip_signal(sine(1)[1], ArbeitspunktClipping), SinHz)[1]} %")
     time.sleep(2)
+    sd.play(clip_signal(sine(1)[1], ArbeitspunktClipping))
+    sd.wait()
     print(f"\nDer Sinus wird nun mit dem Limiter bearbeitet. Es wird der Klirrfaktor und die THD berechnet.\nSie erhalten auch hiervon einen Plot des Signales.")
     time.sleep(4)
     x = system_b(sine(1),lim_kompr,stat_dyn,ArbeitspunktLimiter,Ratio,Attack,Release,MakeUpGain)
     plotInOut(sine(1)[1], x, 'Compressed Sinus-')
-    print(f"\nSinus THD: {klirrfaktorTHD(x, 3)[0]} %")
-    print(f"Sinus Klirrfaktor: {klirrfaktorTHD(x, 3)[1]} %")
+    print(f"\nSinus THD: {klirrfaktorTHD(x, SinHz)[0]} %")
+    print(f"Sinus Klirrfaktor: {klirrfaktorTHD(x, SinHz)[1]} %")
     print("\nEnde der Sinusanalyse!")
 
 if AudioFileAnalyse:
