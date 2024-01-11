@@ -11,7 +11,7 @@ import time
 #Setze True oder False für die Programme Sinusanalyse, AudioFileAnalyse und ReverseEcho
 #Wenn True, dann wird das Programm ausgeführt. Wenn mehrere Programme True sind, dann werden diese nacheinander ausgeführt.
 Sinusanalyse = True
-SinHz = 50
+SinHz = 5
 AudioFileAnalyse = False
 ReverseEcho = False
 
@@ -28,7 +28,7 @@ ArbeitspunktLimiter = -15        #Wert zwischen -50 und 0dB
 Ratio =2                        #Verhältnis, in dem der Pegel der Werte, die den Arbeitspunkt überschreiten, verkleinert werden (wird zu 0 bei Limiter)
 Attack =0.002                   #Eingabe 0.00002 ... 0.01
 Release =0.05                   #Eingabe 0.001 ... 5
-MakeUpGain =3                    #Verstärkung des vorher komprimierten Signals
+MakeUpGain = 3                    #Verstärkung des vorher komprimierten Signals
 
 
 
@@ -208,8 +208,7 @@ def reverseEcho(file, delay, decay):                         # delay = Verzöger
     EchoOut = EchoOut * np.max(np.abs(EchoOut))                     # zurück in den ursprünglichen Wertebereich
     return EchoOut
 
-#Vergleichende Plots von Ein- und Ausgangssignal
-def plotInOut(EingangsSignal, AusgangsSignal, title='', fs=48000):
+def plotInOut(EingangsSignal, AusgangsSignal, DrittesSignal=None, title1='', title2='', fs=48000):
     # Längen der Signale
     length_input = len(EingangsSignal)
     length_output = len(AusgangsSignal)
@@ -218,58 +217,69 @@ def plotInOut(EingangsSignal, AusgangsSignal, title='', fs=48000):
     t_input = np.linspace(0, length_input / fs, length_input, endpoint=False)
     t_output = np.linspace(0, length_output / fs, length_output, endpoint=False)
 
-    dimension=max(EingangsSignal)
+    dimension = max(EingangsSignal)
 
     # Plot
-    plt.figure(figsize=(10, 7))
-    #Für Input
-    plt.subplot(2, 1, 1)
+    plt.figure(figsize=(10, 10))
+
+    # Für Input
+    plt.subplot(3, 1, 1)
     plt.plot(t_input, EingangsSignal, label='Eingangssignal')
-    plt.title(title + 'Eingangssignal (Original)')
+    plt.title('Eingangssignal (Original)')
     plt.xlabel('Zeit')
     plt.ylabel('Amplitude')
     plt.legend()
 
-    #Für Output
-    plt.subplot(2, 1, 2)
+    # Für Output
+    plt.subplot(3, 1, 2)
     plt.plot(t_output, AusgangsSignal, label='Ausgangssignal', color='red')
-    plt.title(title + 'Ausgangssignal (Bearbeitet)')
+    plt.title(title1 + 'Ausgangssignal (Bearbeitet)')
     plt.xlabel('Zeit')
     plt.ylabel('Amplitude')
     plt.ylim(-dimension, dimension)
     plt.legend()
+
+    # Für das dritte Signal
+    if DrittesSignal is not None:
+        length_third = len(DrittesSignal)
+        t_third = np.linspace(0, length_third / fs, length_third, endpoint=False)
+
+        plt.subplot(3, 1, 3)
+        plt.plot(t_third, DrittesSignal, label='Drittes Signal', color='green')
+        plt.title(title2 + 'Signal')
+        plt.xlabel('Zeit')
+        plt.ylabel('Amplitude')
+        plt.legend()
+
     plt.tight_layout()
     plt.show()
-
 
 ####################################################### Programmablauf #######################################################
 
 if Sinusanalyse:
     print(f"\n****Sinusanalyse****\nEine Sinusfunktion (3 Hz) wird in dem von ihnen gewählten Arbeitspunkt: {ArbeitspunktClipping} geclipped. Es wird der Klirrfaktor ({KlirrfaktorOrdnung}. Ordnung) und die THD berechnet.\nSie erhalten außerdem einen Plot des bearbeiteten Signals.")
     time.sleep(5)
-    plotInOut(sine(1)[1], clip_signal(sine(1)[1], ArbeitspunktClipping), 'Clipped Sinus-')
     print(f"\nSinus THD: {klirrfaktorTHD(clip_signal(sine(1)[1], ArbeitspunktClipping), SinHz)[0]} %")
-    print(f"Sinus Klirrfaktor: {klirrfaktorTHD(clip_signal(sine(1)[1], ArbeitspunktClipping), SinHz)[1]} %")
+    print(f"Sinus Klirrfaktor: {klirrfaktorTHD(clip_signal(sine(1)[1], ArbeitspunktClipping), SinHz)[1]} %\n Sie Hören nun den Sinus:")
     time.sleep(2)
     sd.play(clip_signal(sine(1)[1], ArbeitspunktClipping))
     sd.wait()
     print(f"\nDer Sinus wird nun mit dem Limiter bearbeitet. Es wird der Klirrfaktor und die THD berechnet.\nSie erhalten auch hiervon einen Plot des Signales.")
     time.sleep(4)
     x = system_b(sine(1),lim_kompr,stat_dyn,ArbeitspunktLimiter,Ratio,Attack,Release,MakeUpGain)
-    plotInOut(sine(1)[1], x, 'Compressed Sinus-')
+    plotInOut(sine(1)[1],clip_signal(sine(1)[1], ArbeitspunktClipping), x, 'Clippped Sinus-', 'Compressed Sinus-')
+    sd.play(x)
+    sd.wait()
     print(f"\nSinus THD: {klirrfaktorTHD(x, SinHz)[0]} %")
     print(f"Sinus Klirrfaktor: {klirrfaktorTHD(x, SinHz)[1]} %")
     print("\nEnde der Sinusanalyse!")
 
 if AudioFileAnalyse:
     print(f"\n****Analyse eines Audiofiles****\nEin Audiofile wird in dem von ihnen gewählten Arbeitspunkt: {ArbeitspunktClipping} geclipped.\nSie erhalten einen Plot des bearbeiteten Signals.")
-    time.sleep(5)
-    plotInOut(AudioFile()[1], clip_signal(AudioFile()[1], ArbeitspunktClipping), 'Clipped Audiofile-')
-    time.sleep(3)
     print(f"\nDas Audiofile wird nun mit dem Limiter bearbeitet.\nSie erhalten auch hiervon einen Plot des Signales.")
     time.sleep(4)
     x = system_b(AudioFile(),lim_kompr,stat_dyn,ArbeitspunktLimiter,Ratio,Attack,Release,MakeUpGain)
-    plotInOut(AudioFile()[1], x, 'Compressed Audiofile-')
+    plotInOut(AudioFile()[1],clip_signal(AudioFile()[1], ArbeitspunktClipping) , x, 'Clipped Audiofile-', 'Compressed Audiofile-')
     time.sleep(3)
     print("\nJetzt hören sie das bearbeitete Audiofile. Zuerst das Original, dann das clipping und dann das Limiter Signal.")
     #Abspielen der bearbeiteten Audiodatei
