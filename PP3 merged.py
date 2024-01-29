@@ -12,8 +12,8 @@ import time
 #Setze True oder False für die Programme Sinusanalyse, AudioFileAnalyse und ReverseEcho
 #Wenn True, dann wird das Programm ausgeführt. Wenn mehrere Programme True sind, dann werden diese nacheinander ausgeführt.
 Sinusanalyse = False
-AudioFileAnalyse = True
-ReverseEcho = False
+AudioFileAnalyse = False
+ReverseEcho = True
 
 #Setze Arbeitspunkt und Klirrfaktor-Ordnung für Klipping und Limiter
 ArbeitspunktClipping = 0.5
