@@ -19,7 +19,7 @@ ReverseEcho = True
 testdata = 'PP2Data/MonoTrack.wav'
 
 #Setze Arbeitspunkt und Klirrfaktor-Ordnung für Clipping und Limiter
-ArbeitspunktClipping = 0.5
+ArbeitspunktClipping = 0.8
 KlirrfaktorOrdnung = 2
 
 
@@ -68,6 +68,24 @@ def klirrfaktorTHD(signal, Frequenz):
 def clip_signal(signal, AP):
     clipped_signal = np.clip(signal, -AP, AP)
     return clipped_signal
+
+# Eingangsamplituden von 0 bis 1(für Betragsdarstellung)
+input_amplitudes = np.linspace(0, 1, 500)
+# Anwenden des Clippings auf die Eingangsamplituden
+clipped_amplitudes = clip_signal(input_amplitudes, ArbeitspunktClipping)
+# Kennlinie des Clippings plotten
+plt.figure()
+plt.plot(input_amplitudes, clipped_amplitudes, label='Clipping-Kennlinie')
+plt.axhline(ArbeitspunktClipping, color='red', linestyle='--', label=f'Clipping-Schwelle {ArbeitspunktClipping}')
+plt.xlabel('Eingangsamplitude')
+plt.xlim(0, 1)
+plt.ylabel('Ausgangsamplitude nach Clipping')
+plt.ylim(0, 1)
+plt.title('Kennlinie Clipping')
+plt.grid(True)
+plt.legend()
+plt.show()
+
 
 
 #Aufgabenteil B: Limiter
@@ -189,6 +207,20 @@ def system_b(file,Komp_Lim,stat_dyn,threshold,ratio,attack,release,makeupgain):
     ax.set_xlabel('$t$ in s')
     ax.set_ylabel('$y$($t$),$g$($t$) ')
     ax.grid(True)
+    plt.show()
+
+    #############Kennlinie
+
+    plt.figure()
+    plt.plot(Lx, Lx_c, label='Limiter-Kennlinie')
+    plt.axhline(threshold, color='red', linestyle='--', label=f'Threshold ({threshold} dB)')
+    plt.xlabel('Eingangspegel (dB)')
+    plt.xlim(-50, 0)
+    plt.ylabel('Ausgangspegel (dB)')
+    plt.ylim(-50, 0)
+    plt.title('Statische Kennlinie des Limiters')
+    plt.grid(True)
+    plt.legend()
     plt.show()
 
     return y_a
