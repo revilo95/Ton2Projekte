@@ -17,7 +17,7 @@ ReverseEcho = False
 testdata = 'PP2Data/MonoTrack.wav'
 
 #Setze Arbeitspunkt und Klirrfaktor-Ordnung für Clipping und Limiter
-ArbeitspunktClipping = 0.5
+ArbeitspunktClipping = 0.9
 KlirrfaktorOrdnung = 2
 
 lim_kompr ='Lim'                #Wahl zwischen Limiter und Kompressor; Eingabe 'Lim' oder 'Komp'
@@ -27,6 +27,7 @@ Ratio =2                        #Verhältnis, in dem der Pegel der Werte, die de
 Attack =0.002                   #Eingabe 0.00002 ... 0.01
 Release =0.05                   #Eingabe 0.001 ... 5
 MakeUpGain =3                    #Verstärkung des vorher komprimierten Signals
+
 
 
 
