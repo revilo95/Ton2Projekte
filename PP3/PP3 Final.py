@@ -1,7 +1,16 @@
-#Gruppe 7
+#Gruppe 8   Oliver Wolfertz  Matr.Nr.: 2619455
 #PP3
-#importe
+"""
+Arbeitseinteilng:
+Testdateien Erzeugen/Erstellen (Sine,PlugSine,AudioFile) - Julius Sprang
+Limiter Implementierung - Kiyo Schaal
+Clipping, Klirrfaktor und THD - Oliver Wolfertz
+Reverse Echo - Oliver Wolfertz
+Plots - Niklas Müller, Kiyo Schaal
+Programmablauf - Oliver Wolfertz
+"""
 
+#importe
 import numpy as np
 from scipy.io.wavfile import read
 from scipy.io.wavfile import write
@@ -9,14 +18,14 @@ import matplotlib.pyplot as plt
 import sounddevice as sd
 import time
 
-#Setze True oder False für die Programme Sinusanalyse, AudioFileAnalyse und ReverseEcho
+#Setzen sie True oder False für die Programme Sinusanalyse, AudioFileAnalyse und ReverseEcho.
 #Wenn True, dann wird das Programm ausgeführt. Wenn mehrere Programme True sind, dann werden diese nacheinander ausgeführt.
 Sinusanalyse = True
 SinHz = 440
 AudioFileAnalyse = True
 ReverseEcho = True
 
-testdata = 'PP2Data/MonoTrack.wav'
+testdata = 'Tracks/MonoTrack.wav'
 
 #Setze Arbeitspunkt und Klirrfaktor-Ordnung für Clipping und Limiter
 ArbeitspunktClipping = 0.8
@@ -25,36 +34,35 @@ KlirrfaktorOrdnung = 2
 
 lim_kompr ='Lim'                #Wahl zwischen Limiter und Kompressor; Eingabe 'Lim' oder 'Komp'
 stat_dyn =1                     #Wahl zwischen statischer oder dynamischer Kennlinie; Eingabe 0 oder 1
-ArbeitspunktLimiter = -15        #Wert zwischen -50 und 0dB
+ArbeitspunktLimiter = -15       #Wert zwischen -50 und 0dB
 Ratio =2                        #Verhältnis, in dem der Pegel der Werte, die den Arbeitspunkt überschreiten, verkleinert werden (wird zu 0 bei Limiter)
 Attack =0.002                   #Eingabe 0.00002 ... 0.01
 Release =0.05                   #Eingabe 0.001 ... 5
-MakeUpGain = 3                    #Verstärkung des vorher komprimierten Signals
+MakeUpGain = 3                  #Verstärkung des vorher komprimierten Signals
 
-
-
+#Sinus Erzeugen
 def sine(duration, Hz=SinHz):
     rateArray = np.arange(0, duration, 1 / 48000)
     sine = np.sin(2 * np.pi * Hz * rateArray)
     return 48000, sine
 
+#Signal für Reversed Echo Erzeugen
 def PlugSine(duration):
     rateArray = np.arange(0, duration, 1 / 48000)
     fade = np.logspace(0, -3, int(48000 * duration), endpoint=False)
     sine = fade * np.sin(2 * np.pi * 440 * rateArray)
     return 48000, sine
 
+#Audiofile einlesen
 def AudioFile():
     fs, data = read(testdata)
     data = data / np.max(np.abs(data)) #Normierung
     return fs, data
 
-
 #Klirrfaktor und THD
 def klirrfaktorTHD(signal, Frequenz):
 
-    FreqBereich = np.fft.fft(signal)
-
+    FreqBereich = np.fft.fft(signal) # Berechne die Fouriertransformation des Signals
     f = [0,0,0] # Erstelle ein leeres Array für Oberschwingungen
     for i in range(1, 4):
         f[i - 1] = abs(FreqBereich[i * Frequenz]) # Berechne die Oberschwingungen aus Grundschwingung
@@ -69,17 +77,15 @@ def clip_signal(signal, AP):
     clipped_signal = np.clip(signal, -AP, AP)
     return clipped_signal
 
-# Eingangsamplituden von 0 bis 1(für Betragsdarstellung)
-input_amplitudes = np.linspace(0, 1, 500)
-# Anwenden des Clippings auf die Eingangsamplituden
-clipped_amplitudes = clip_signal(input_amplitudes, ArbeitspunktClipping)
-# Kennlinie des Clippings plotten
+# Betragsdarstellung der Kennlinie
+eingangsAmplitude = np.linspace(0, 1, 500)
+clippedAmplitude = clip_signal(eingangsAmplitude, ArbeitspunktClipping) # Anwenden des Clippings auf die Eingangsamplituden
 plt.figure()
-plt.plot(input_amplitudes, clipped_amplitudes, label='Clipping-Kennlinie')
+plt.plot(eingangsAmplitude, clippedAmplitude, label='Clipping-Kennlinie')
 plt.axhline(ArbeitspunktClipping, color='red', linestyle='--', label=f'Clipping-Schwelle {ArbeitspunktClipping}')
 plt.xlabel('Eingangsamplitude')
 plt.xlim(0, 1)
-plt.ylabel('Ausgangsamplitude nach Clipping')
+plt.ylabel('Ausgangsamplitude')
 plt.ylim(0, 1)
 plt.title('Kennlinie Clipping')
 plt.grid(True)
@@ -87,21 +93,14 @@ plt.legend()
 plt.show()
 
 
-
 #Aufgabenteil B: Limiter
 def system_b(file,Komp_Lim,stat_dyn,threshold,ratio,attack,release,makeupgain):
 
-    ## Zentrale Schalter
-    #wahl_dynamik = 1  # wenn wahl_dynamik = 1: dynamische Kennlinie, wenn 0: statische Kennlinie
-    #wahl_funktion = 'Lim' # Wahl:'Lim:' Limiter, 'Komp': Kompressor
-
     x_ref = pow(2, 15)-1  #Referenzwert für Pegel
 
-    ####################################
-    # Einlesen Testsignal
-    #Fs, x = read("PP2Data/MonoTrack.wav")
     Fs = file[0]
     x = file[1]
+    org_x = x
 
     anz_werte = x.size
     dauer_s = anz_werte/Fs
@@ -175,6 +174,7 @@ def system_b(file,Komp_Lim,stat_dyn,threshold,ratio,attack,release,makeupgain):
 
     # Anwenden der momentanen Verstärkung/Dämpfung
     if stat_dyn == 1:
+
        Lg_M = Lg_s + makeupgain
 
        g_a = 10**(Lg_M/20)        #lineare Verstärkung, zeitabhängig
@@ -187,6 +187,7 @@ def system_b(file,Komp_Lim,stat_dyn,threshold,ratio,attack,release,makeupgain):
             if x[i] < 0:
                 y_a[i] = -y_a[i]
 
+    vnorm = y_a
     y_a = (y_a/x_ref)   # normieren, zur grafischen Darstellung
 
 
@@ -218,7 +219,7 @@ def system_b(file,Komp_Lim,stat_dyn,threshold,ratio,attack,release,makeupgain):
     plt.xlim(-50, 0)
     plt.ylabel('Ausgangspegel (dB)')
     plt.ylim(-50, 0)
-    plt.title('Statische Kennlinie des Limiters')
+    plt.title('Kennlinie Limiter')
     plt.grid(True)
     plt.legend()
     plt.show()
@@ -227,34 +228,34 @@ def system_b(file,Komp_Lim,stat_dyn,threshold,ratio,attack,release,makeupgain):
 
 
 #Reversed Echo
-def reverseEcho(file, delay, decay):                         # delay = Verzögerungszeit, decay = Abklingzeit
+def reverseEcho(file, delay, decay):     #delay = Verzögerungszeit, decay = Abklingzeit
 
     fs = file[0]
     file = file[1]
-    fsDelay = int(delay * fs)                                  # Verzögerung in Abtastpunkten berechnen
+    fsDelay = int(delay * fs)       # Verzögerung in Abtastpunkten berechnen
 
     # Reverse Echo
     emptyArr = np.zeros_like(file)
-    emptyArr[fsDelay:] = file[:-fsDelay] * decay            # Echo erzeugen
-    reverse_echo = emptyArr[::-1]                                      # Echo rückwärts abspielen, Werte von echo in umgekehrter Reihenfolge
-    EchoOut = file + reverse_echo                                  # Ausgabe durch Originalsound und reverse Echo
-    EchoOut = EchoOut * np.max(np.abs(EchoOut))                     # zurück in den ursprünglichen Wertebereich
+    emptyArr[fsDelay:] = file[:-fsDelay] * decay            #Echo erzeugen
+    reverse_echo = emptyArr[::-1]                           #Echo rückwärts abspielen, Werte von echo in umgekehrter Reihenfolge
+    EchoOut = file + reverse_echo                           #Ausgabe durch Originalsound und reverse Echo
+    EchoOut = EchoOut * np.max(np.abs(EchoOut))             #zurück in den ursprünglichen Wertebereich
     return EchoOut
 
 def plotInOut(EingangsSignal, AusgangsSignal,  title1='', title2='',DrittesSignal=None, start_time=None, end_time=None, fs=48000):
     # Längen der Signale
-    length_input = len(EingangsSignal)
-    length_output = len(AusgangsSignal)
+    Eingangslänge = len(EingangsSignal)
+    Ausgangslänge = len(AusgangsSignal)
 
     # Zeitvektoren
-    t_input = np.linspace(0, length_input / fs, length_input, endpoint=False)
-    t_output = np.linspace(0, length_output / fs, length_output, endpoint=False)
+    t_input = np.linspace(0, Eingangslänge / fs, Eingangslänge, endpoint=False)
+    t_output = np.linspace(0, Ausgangslänge / fs, Ausgangslänge, endpoint=False)
 
     # Festlegung der Zeitgrenzen
     if start_time is None:
         start_time = 0
     if end_time is None:
-        end_time = length_input / fs
+        end_time = Eingangslänge / fs
 
     # Indizes für den Ausschnitt
     start_index = int(start_time * fs)
@@ -286,7 +287,7 @@ def plotInOut(EingangsSignal, AusgangsSignal,  title1='', title2='',DrittesSigna
     plt.ylim(-dimension, dimension)
     plt.legend()
 
-    # Für das dritte Signal
+    # Für optionales drittes Signal, wird bei Reverse Echo nicht verwendet
     if DrittesSignal is not None:
         length_third = len(DrittesSignal)
         t_third = np.linspace(0, length_third / fs, length_third, endpoint=False)
@@ -297,14 +298,17 @@ def plotInOut(EingangsSignal, AusgangsSignal,  title1='', title2='',DrittesSigna
         plt.title(title2 + 'Signal')
         plt.xlabel('Zeit')
         plt.ylabel('Amplitude')
+        plt.ylim(-dimension, dimension)
         plt.legend()
 
     plt.tight_layout()
     plt.show()
+
+
 ####################################################### Programmablauf #######################################################
 
 if Sinusanalyse:
-    print(f"\n****Sinusanalyse****\nEine Sinusfunktion (3 Hz) wird in dem von ihnen gewählten Arbeitspunkt: {ArbeitspunktClipping} geclipped. Es wird der Klirrfaktor ({KlirrfaktorOrdnung}. Ordnung) und die THD berechnet.\nSie erhalten außerdem einen Plot des bearbeiteten Signals.")
+    print(f"\n****Sinusanalyse****\nEine Sinusfunktion ({SinHz}z) wird in dem von ihnen gewählten Arbeitspunkt: {ArbeitspunktClipping} geclipped. Es wird der Klirrfaktor ({KlirrfaktorOrdnung}. Ordnung) und die THD berechnet.\nSie erhalten außerdem einen Plot des bearbeiteten Signals.")
     time.sleep(5)
     print(f"\nSinus THD: {klirrfaktorTHD(clip_signal(sine(1)[1], ArbeitspunktClipping), SinHz)[0]} %")
     print(f"Sinus Klirrfaktor: {klirrfaktorTHD(clip_signal(sine(1)[1], ArbeitspunktClipping), SinHz)[1]} %\n Sie Hören nun den Sinus:")
